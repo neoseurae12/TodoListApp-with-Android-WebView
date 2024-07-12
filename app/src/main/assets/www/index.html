@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1, user-scalable=0">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="style.css" />
+
+    <title>투두 리스트</title>
+</head>
+<body>
+    <div class="todo-list_container">
+        <div id="todo-list_headerField">
+            <h1>2024-07-10</h1>
+        </div>
+
+        <ul id="todo-list"></ul>
+
+        <button type="button" id="addButton">
+            <span></span>
+            <span></span>
+        </button>
+    </div>
+
+    <!-- deleteAllTodoItems() 함수를 실험하기 위한 임시 버튼 => 나중엔 지울 것 -->
+    <!-- <button type="button" id="deleteAllButton"> -->
+
+<!--    <script type="module" src="./todo_list.js"></script>-->
+
+    <script type="module">
+        import TinyGesture from "https://unpkg.com/tinygesture@1.1.4/TinyGesture.js";
+
+        const addButton = document.querySelector('#addButton');
+        addButton.addEventListener('click', () => {
+            addTodoItem("", "", "", false);
+        })
+
+        function addTodoItem(id, initialTodoText, initialDueDateText, initialDone) {
+            const todoList = document.getElementById("todo-list");
+
+            const todoItem = createTodoItem(id, initialTodoText, initialDueDateText, initialDone);
+            todoList.appendChild(todoItem);
+
+            if (initialTodoText === "") {   // 웹을 통한 새로운 투두의 추가일 경우
+                inputMode(todoItem);
+                deactivateAddButton();
+            } else {
+                if (id === "") {    // 안드로이드를 통한 새로운 투두의 추가일 경우
+                    const uuid = window.Android.insertTodo(initialTodoText);
+                    todoItem.id = uuid;
+                    console.log("inserted todo's UUID: " + todoItem.id);
+                }
+
+                // 기존 투두의 추가일 경우
+                displayMode(todoItem);
+                activateAddButton();
+            }
+        }
+
+        window.addTodoItem = addTodoItem;
+
+        function removeTodoItem(todoItem) {
+            window.Android.deleteTodo(todoItem.id);
+
+            todoItem.remove();
+        }
+
+        function removeAllTodoItems() {
+            const allTodoItems = document.querySelectorAll('#todo-list li');
+            for (let i = 0; i < allTodoItems.length; i++) {
+                console.log(allTodoItems[i]);
+                removeTodoItem(allTodoItems[i]);
+            }
+        }
+
+        window.removeAllTodoItems = removeAllTodoItems;
+
+        function activateAddButton() {
+            addButton.disabled = false;
+            addButton.style.backgroundColor = "#ff8039";
+
+            // 안드로이드의 추가 버튼도 활성 처리
+            window.Android.updateWebAddButtonEnabled(true);
+        }
+
+        function deactivateAddButton() {
+            addButton.disabled = true;
+            addButton.style.backgroundColor = "#afb0b1";
+
+            // 안드로이드의 추가 버튼도 비활성 처리
+            window.Android.updateWebAddButtonEnabled(false);
+        }
+
+        function createTodoItem(id, initialTodoText, initialDueDateText, initialDone) {
+            const newTodoItem = document.createElement('li');
+            newTodoItem.className = 'todo-item';
+            newTodoItem.innerHTML = `
+                    <div class="todo-item_container">
+                        <div class="swipe-item">
+                            <button class="checkbox"></button>
+                            <div class="contentField">
+                                <form class="todo-form">
+                                    <input type="text" class="todoInput" placeholder="투두를 입력해주세요." required value="${initialTodoText}">
+                                </form>
+                                <span class="todo-content">${initialTodoText}</span>
+                                <span class="dueDate" style="display: none;">${initialDueDateText}</span>
+                            </div>
+                        </div>
+                        <button type="button" class="deleteButton"><i class="fas fa-trash-alt"></i></button>
+                    </div>
+                `;
+
+            if (id !== "") {
+                newTodoItem.id = id;
+            }
+
+            if (initialDone === true) {
+                newTodoItem.classList.add('complete');
+            }
+
+            // 스와이프 기능
+            const swipeItem = newTodoItem.querySelector(".swipe-item");
+            initSlider(swipeItem);
+
+            // 삭제 기능
+            const deleteButton = newTodoItem.querySelector(".deleteButton");
+            deleteButton.addEventListener('click', () => {
+                removeTodoItem(newTodoItem);
+                activateAddButton();
+            })
+
+            // 입력 기능
+            const todoForm = newTodoItem.querySelector(".todo-form");
+            todoForm.addEventListener("submit", (event) => handleTodoSubmit(event, newTodoItem));
+
+            // 체크박스 토글 기능
+            const todoCheckBox = newTodoItem.querySelector(".checkbox");
+            todoCheckBox.addEventListener('click', () => {
+                newTodoItem.classList.toggle('complete');
+
+                if (newTodoItem.classList.contains('complete')) {
+                    window.Android.updateTodoDone(newTodoItem.id, true);
+                } else {
+                    window.Android.updateTodoDone(newTodoItem.id, false);
+                }
+            })
+
+            return newTodoItem;
+        }
+
+        function handleTodoSubmit(event, newTodoItem) {
+            event.preventDefault();
+
+            const todoInput = newTodoItem.querySelector(".todoInput");
+            const todoInputValue = todoInput.value;
+            console.log(todoInputValue);  // for 디버깅
+
+            const todoContent = newTodoItem.querySelector(".todo-content");
+            todoContent.textContent = todoInputValue;
+
+            displayMode(newTodoItem);
+
+            activateAddButton();
+
+            if (newTodoItem.id === "") {
+                const uuid = window.Android.insertTodo(todoContent.textContent);
+                newTodoItem.id = uuid;
+                console.log("inserted todo's UUID: " + newTodoItem.id);
+            } else {
+                window.Android.updateTodoContent(newTodoItem.id, todoContent.textContent);
+            }
+        }
+
+        function inputMode(newTodoItem) {
+            const todoForm = newTodoItem.querySelector(".todo-form");
+            const todoInput = todoForm.querySelector(".todoInput");
+            const todoContent = newTodoItem.querySelector(".todo-content");
+            const todoDueDate = newTodoItem.querySelector(".dueDate");
+            const todoCheckBox = newTodoItem.querySelector(".checkbox");
+
+            todoForm.style.display = "block";
+            todoInput.focus();
+            todoContent.style.display = "none";
+            todoDueDate.style.display = "none";
+            todoCheckBox.disabled = true;
+        }
+
+        function displayMode(newTodoItem) {
+            const todoForm = newTodoItem.querySelector(".todo-form");
+            const todoContent = newTodoItem.querySelector(".todo-content");
+            const todoDueDate = newTodoItem.querySelector(".dueDate");
+            const todoCheckBox = newTodoItem.querySelector(".checkbox");
+
+            todoForm.style.display = "none";
+            todoContent.style.display = "block";
+            todoDueDate.style.display = "block";
+            todoCheckBox.disabled = false;
+        }
+
+        function initSlider(target) {
+            let swiped = false;
+            let startOffset = 0;
+            const decelerationOnOverflow = 4;
+            const revealWidth = 50;
+            const snapWidth = revealWidth / 1.5;
+
+            const gesture = new TinyGesture(target);
+
+            // 스와이프 제스처
+            gesture.on("panmove", (event) => {
+                if (gesture.animationFrame) {
+                    return;
+                }
+
+                gesture.animationFrame = window.requestAnimationFrame(() => {
+                    let getX = (x) => {
+                        if (-revealWidth < x && x < 0) {
+                            return x;
+                        }
+                        if (x < -revealWidth) {
+                            return -revealWidth;
+                        }
+                        if (x > 0) {
+                            return 0;
+                        }
+                    };
+                    const newX = getX(startOffset + gesture.touchMoveX);
+                    target.style.transform = "translateX(" + newX + "px)";
+                    if (newX >= snapWidth || newX <= -snapWidth) {
+                    swiped = newX < 0 ? -revealWidth : revealWidth;
+                    } else {
+                    swiped = false;
+                    }
+                    window.requestAnimationFrame(() => {
+                    target.style.transition = null;
+                    });
+                    gesture.animationFrame = null;
+                });
+            });
+
+            gesture.on("panend", () => {
+                window.cancelAnimationFrame(gesture.animationFrame);
+                gesture.animationFrame = null;
+                window.requestAnimationFrame(() => {
+                    target.style.transition = "transform .2s ease-in";
+                    if (!swiped) {
+                        startOffset = 0;
+                        target.style.transform = null;
+                    } else {
+                        startOffset = swiped;
+                        target.style.transform = "translateX(" + swiped + "px)";
+                    }
+                });
+            });
+        }
+
+    </script>
+</body>
+</html>
