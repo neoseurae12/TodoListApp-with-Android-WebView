@@ -5,11 +5,12 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import java.io.Serializable
 import java.time.LocalDate
+import java.util.UUID
 
 @Entity(tableName = "Todo")
 data class TodoEntity(
-    @PrimaryKey(true)
-    val id: Int = 0,
+    @PrimaryKey
+    val id: UUID = UUID.randomUUID(),
 
     @ColumnInfo
     var content: String,
