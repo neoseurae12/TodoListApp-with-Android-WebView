@@ -25,6 +25,9 @@ class MainViewModel : ViewModel() {
             todoRepository.getTodo(todoId)
         }
 
+    var webAddButtonEnabled = true
+    var hasInitialized = false
+
     fun loadTodo(todoId: UUID) {
         todoIdLiveData.postValue(todoId)
     }

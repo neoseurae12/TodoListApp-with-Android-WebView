@@ -1,7 +1,5 @@
 package com.daangn.todolistapp
 
-import android.content.Context
-import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Bundle
@@ -38,11 +36,7 @@ class MainActivity : AppCompatActivity() {
         ViewModelProvider(this)[MainViewModel::class.java]
     }
 
-//    private lateinit var todoList: List<TodoEntity>
     private lateinit var todo: TodoEntity
-
-    private var webAddButtonEnabled = true
-    private var hasInitialized = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,6 +51,12 @@ class MainActivity : AppCompatActivity() {
 
         setSupportActionBar(binding.todoListToolbar)
         supportActionBar?.setDisplayShowTitleEnabled(false)
+
+        mainViewModel.todoLiveData.observe(this@MainActivity) { todo ->
+            todo?.let {
+                this@MainActivity.todo = todo
+            }
+        }
 
         binding.apply {
 
@@ -77,7 +77,7 @@ class MainActivity : AppCompatActivity() {
                         before: Int,
                         count: Int
                     ) {
-                        if (webAddButtonEnabled) {
+                        if (mainViewModel.webAddButtonEnabled) {
                             todoAddImageButton.isEnabled = !s.isNullOrBlank()
                         }
                     }
@@ -89,33 +89,35 @@ class MainActivity : AppCompatActivity() {
             todoListWebView.apply {
                 settings.javaScriptEnabled = true
                 webChromeClient = WebChromeClient()
-                addJavascriptInterface(WebAndroidBridge(this@MainActivity), "Android")
+                addJavascriptInterface(WebAndroidBridge(), "Android")
 
                 webViewClient = object : WebViewClient() {
                     override fun onPageFinished(view: WebView?, url: String?) {
                         super.onPageFinished(view, url)
 
                         // 페이지가 로드된 후 LiveData 관찰 시작
-                        mainViewModel.todoListLiveData.observe(this@MainActivity) { todos ->
+                        mainViewModel.apply {
+                            todoListLiveData.observe(this@MainActivity) { todos ->
 
-                            // 데이터가 처음 로드된 경우에만 리스트 순회
-                            if (!hasInitialized && !todos.isNullOrEmpty()) {
-                                for (todo in todos) {
-                                    val js = "javascript:addTodoItem('${todo.id}', '${todo.content}', '${todo.dueDate ?: ""}', ${todo.isDone})"
-                                    binding.todoListWebView.loadUrl(js)
+                                // 데이터가 처음 로드된 경우에만 리스트 순회
+                                if (!hasInitialized && !todos.isNullOrEmpty()) {
+                                    for (todo in todos) {
+                                        val js = "javascript:addTodoItem('${todo.id}', '${todo.content}', '${todo.dueDate ?: ""}', ${todo.isDone})"
+                                        binding.todoListWebView.loadUrl(js)
+                                    }
+
+                                    // 데이터가 로드되었음을 표시
+                                    hasInitialized = true
+                                    Log.d(TAG, "hasInitialized: $hasInitialized")
+
+                                    mainViewModel.loadTodo(todos[0].id)
                                 }
 
-                                // 데이터가 로드되었음을 표시
-                                hasInitialized = true
-                                Log.d(TAG, "hasInitialized: $hasInitialized")
-
-                                mainViewModel.loadTodo(todos[0].id)
+                                for (todo in todos) {
+                                    Log.d(TAG, "$todo")
+                                }
+                                Log.d(TAG, "Got ${todos.size} todo(s)")
                             }
-
-                            for (todo in todos) {
-                                Log.d(TAG, "$todo")
-                            }
-                            Log.d(TAG, "Got ${todos.size} todo(s)")
                         }
                     }
                 }
@@ -137,42 +139,6 @@ class MainActivity : AppCompatActivity() {
                     todoTextInputEditText.text?.clear()
                     todoTextInputEditText.clearFocus()
                 }
-            }
-        }
-
-        mainViewModel.apply {
-
-//            todoListLiveData.observe(this@MainActivity) { todos ->
-//                todos?.let {
-//                    Log.i(TAG, "Got ${todos.size} todo(s)")
-//
-//                    // todoList = todos
-//
-//                    // val js = "javascript:setTodos(${todos.size})"
-//                    // binding.todoListWebView.loadUrl(js)
-//                }
-//
-//                Log.i(TAG, "${hasInitialized}")
-//
-//                if (!hasInitialized && !todos.isNullOrEmpty()) {
-//                    for (todo in todos) {
-//                        val js = "javascript:addTodoItem('${todo.content}', '${todo.dueDate}')"
-//                        binding.todoListWebView.loadUrl(js)
-//                    }
-//
-//                    hasInitialized = true
-//                }
-//
-////                for (todo in todos) {
-////                    binding.todoListWebView.evaluateJavascript("javascript:addTodoItem('${todo.content}', '${todo.dueDate}')", null)
-////                }
-//            }
-
-            todoLiveData.observe(this@MainActivity) { todo ->
-                todo?.let {
-                    this@MainActivity.todo = todo
-                }
-                // Log.i(TAG, "todoLiveData: $todo")
             }
         }
     }
@@ -211,17 +177,12 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onConfigurationChanged(newConfig: Configuration) {
-        super.onConfigurationChanged(newConfig)
-        // 화면 회전 시 MainActivity 가 재생성되지 않음
-    }
-
     private fun hideKeyboard(view: View) {
         val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
         imm.hideSoftInputFromWindow(view.windowToken, 0)
     }
 
-    inner class WebAndroidBridge(private val context: Context) {
+    inner class WebAndroidBridge {
 
         @JavascriptInterface
         fun updateTodo(id: String, content: String, dueDate: String, isDone: Boolean) {
@@ -282,7 +243,7 @@ class MainActivity : AppCompatActivity() {
         @JavascriptInterface
         fun updateWebAddButtonEnabled(enabled: Boolean) {
             runOnUiThread {
-                webAddButtonEnabled = enabled
+                mainViewModel.webAddButtonEnabled = enabled
                 binding.todoAddImageButton.apply {
                     isEnabled = enabled
                     if (enabled) {
