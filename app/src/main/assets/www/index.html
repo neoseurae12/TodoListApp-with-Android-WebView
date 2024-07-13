@@ -46,6 +46,11 @@
         import TinyGesture from "https://unpkg.com/tinygesture@1.1.4/TinyGesture.js";
 
         const headerTitle = document.getElementById("headerTitle");
+        const bottomSheet = document.getElementById("bottomSheet");
+        const overlay = document.getElementById("overlay");
+        let clickedTodoItem;
+        let isAnyTodoInInputMode = false;
+        let todoItemInInputMode = null;
 
         const today = new Date();
         const year = today.getFullYear();
@@ -53,6 +58,13 @@
         const day = String(today.getDate()).padStart(2, '0');
         const formattedDate = year + '-' + month + '-' + day;
         headerTitle.textContent = formattedDate;
+
+        document.addEventListener("click", function (event) {
+            if (!bottomSheet.contains(event.target) && event.target !== bottomSheet) {
+                closeBottomSheet();
+            }
+        });
+
         const addButton = document.querySelector('#addButton');
         addButton.addEventListener('click', () => {
             addTodoItem("", "", "", false);
@@ -66,7 +78,6 @@
 
             if (initialTodoText === "") {   // 웹을 통한 새로운 투두의 추가일 경우
                 inputMode(todoItem);
-                deactivateAddButton();
             } else {
                 if (id === "") {    // 안드로이드를 통한 새로운 투두의 추가일 경우
                     const uuid = window.Android.insertTodo(initialTodoText);
@@ -76,12 +87,17 @@
 
                 // 기존 투두의 추가일 경우
                 displayMode(todoItem);
-                activateAddButton();
             }
+
+            addTodoContentFieldClickListener(todoItem)
         }
 
         function removeTodoItem(todoItem) {
             window.Android.deleteTodo(todoItem.id);
+
+            if (todoItem === todoItemInInputMode) {
+                isAnyTodoInInputMode = false;
+            }
 
             todoItem.remove();
         }
@@ -89,7 +105,7 @@
         function removeAllTodoItems() {
             const allTodoItems = document.querySelectorAll('#todo-list li');
             for (let i = 0; i < allTodoItems.length; i++) {
-                console.log(allTodoItems[i]);
+                console.log("삭제된 투두: " + allTodoItems[i]);
                 removeTodoItem(allTodoItems[i]);
             }
         }
@@ -98,14 +114,20 @@
         window.removeAllTodoItems = removeAllTodoItems;
 
         function activateAddButton() {
-            addButton.disabled = false;
-            addButton.style.backgroundColor = "#ff8039";
+            console.log("activate add button: " + !isAnyTodoInInputMode);
 
-            // 안드로이드의 추가 버튼도 활성 처리
-            window.Android.updateWebAddButtonEnabled(true);
+            if (!isAnyTodoInInputMode) {
+                addButton.disabled = false;
+                addButton.style.backgroundColor = "#ff8039";
+
+                // 안드로이드의 추가 버튼도 활성 처리
+                window.Android.updateWebAddButtonEnabled(true);
+            }
         }
 
         function deactivateAddButton() {
+            console.log("activate add button: " + !isAnyTodoInInputMode);
+
             addButton.disabled = true;
             addButton.style.backgroundColor = "#afb0b1";
 
@@ -122,7 +144,7 @@
                             <button class="checkbox"></button>
                             <div class="contentField">
                                 <form class="todo-form">
-                                    <input type="text" class="todoInput" placeholder="투두를 입력해주세요." required value="${initialTodoText}">
+                                    <input type="text" class="todoInput" placeholder="투두를 입력해주세요." required value="${initialTodoText}" name="userTodoInput">
                                 </form>
                                 <span class="todo-content">${initialTodoText}</span>
                                 <span class="dueDate" style="display: none;">${initialDueDateText}</span>
@@ -175,14 +197,15 @@
 
             const todoInput = newTodoItem.querySelector(".todoInput");
             const todoInputValue = todoInput.value;
-            console.log(todoInputValue);  // for 디버깅
+            console.log("입력 받은 투두: " + todoInputValue);  // for 디버깅
 
             const todoContent = newTodoItem.querySelector(".todo-content");
             todoContent.textContent = todoInputValue;
 
+            isAnyTodoInInputMode = false;
+            todoItemInInputMode = null;
+            console.log("inputMode: " + isAnyTodoInInputMode);
             displayMode(newTodoItem);
-
-            activateAddButton();
 
             if (newTodoItem.id === "") {
                 const uuid = window.Android.insertTodo(todoContent.textContent);
@@ -193,7 +216,24 @@
             }
         }
 
+        function addTodoContentFieldClickListener(todoItem) {
+            const todoContentField = todoItem.querySelector(".contentField");
+            todoContentField.addEventListener('click', function (event) {
+                event.stopPropagation();
+
+                if (!isAnyTodoInInputMode) {
+                    openBottomSheet();
+                    clickedTodoItem = todoItem;
+                    console.log("clickedTodoItem: " + clickedTodoItem.querySelector('.todo-content').textContent);
+                }
+            });
+        }
+
         function inputMode(newTodoItem) {
+            isAnyTodoInInputMode = true;
+            todoItemInInputMode = newTodoItem;
+            console.log("inputMode: " + isAnyTodoInInputMode);
+
             const todoForm = newTodoItem.querySelector(".todo-form");
             const todoInput = todoForm.querySelector(".todoInput");
             const todoContent = newTodoItem.querySelector(".todo-content");
@@ -205,6 +245,8 @@
             todoContent.style.display = "none";
             todoDueDate.style.display = "none";
             todoCheckBox.disabled = true;
+
+            deactivateAddButton();
         }
 
         function displayMode(newTodoItem) {
@@ -217,12 +259,13 @@
             todoContent.style.display = "block";
             todoDueDate.style.display = "block";
             todoCheckBox.disabled = false;
+
+            activateAddButton();
         }
 
         function initSlider(target) {
             let swiped = false;
             let startOffset = 0;
-            const decelerationOnOverflow = 4;
             const revealWidth = 50;
             const snapWidth = revealWidth / 1.5;
 
@@ -249,12 +292,12 @@
                     const newX = getX(startOffset + gesture.touchMoveX);
                     target.style.transform = "translateX(" + newX + "px)";
                     if (newX >= snapWidth || newX <= -snapWidth) {
-                    swiped = newX < 0 ? -revealWidth : revealWidth;
+                        swiped = newX < 0 ? -revealWidth : revealWidth;
                     } else {
-                    swiped = false;
+                        swiped = false;
                     }
                     window.requestAnimationFrame(() => {
-                    target.style.transition = null;
+                        target.style.transition = null;
                     });
                     gesture.animationFrame = null;
                 });
@@ -274,6 +317,82 @@
                     }
                 });
             });
+        }
+
+        let touch_start = 0;
+        let scroll_start;
+
+        bottomSheet.addEventListener("touchstart", (event) => {
+            touch_start = event.touches[0].pageY;
+            scroll_start = bottomSheet.scrollTop;
+        });
+
+        bottomSheet.addEventListener("touchmove", (event) => {
+            if (((touch_start - event.touches[0].pageY) < 0) && (scroll_start <= 0)) {
+                closeBottomSheet()
+            };
+        });
+
+        function closeBottomSheet() {
+            bottomSheet.style.bottom = "-100%";
+            overlay.style.display = 'none';
+        }
+
+        function openBottomSheet() {
+            overlay.style.display = 'block';
+            bottomSheet.style.bottom = 0;
+
+            editButton.style.display = "flex";
+            dueDateButton.style.display = "flex";
+            dueDateForm.style.display = "none";
+        }
+
+        const editButton = bottomSheet.querySelector("#editButton");
+        editButton.addEventListener('click', function () {
+            console.log("editButton is clicked!");
+            closeBottomSheet();
+            inputMode(clickedTodoItem);
+        });
+
+        const dueDateButton = bottomSheet.querySelector("#dueDateButton");
+        dueDateButton.addEventListener('click', function () {
+            console.log("dueDateButton is clicked!");
+            showDueDatePicker();
+        });
+
+        const dueDateForm = bottomSheet.querySelector("#dueDateForm");
+        dueDateForm.addEventListener("submit", (event) => handleDueDateSubmit(event));
+
+        const dueDateInput = dueDateForm.querySelector("input");
+
+        function showDueDatePicker() {
+            editButton.style.display = "none";
+            dueDateButton.style.display = "none";
+            dueDateForm.style.display = "flex";
+
+            const dueDateSpan = clickedTodoItem.querySelector(".dueDate");
+
+            console.log("기존 마감일: " + dueDateSpan.textContent);
+
+            if (dueDateSpan.textContent !== "") {
+                dueDateInput.value = dueDateSpan.textContent;
+            } else {
+                dueDateInput.value = "";
+            }
+        }
+
+        function handleDueDateSubmit(event) {
+            event.preventDefault();
+
+            console.log("새 마감일: " + dueDateInput.value);  // for 디버깅
+
+            const dueDateSpan = clickedTodoItem.querySelector(".dueDate");
+
+            dueDateSpan.textContent = dueDateInput.value;
+
+            closeBottomSheet();
+
+            window.Android.updateTodoDueDate(clickedTodoItem.id, dueDateInput.value);
         }
 
     </script>
