@@ -12,7 +12,7 @@
 <body>
     <div class="todo-list_container">
         <div id="todo-list_headerField">
-            <h1>2024-07-10</h1>
+            <h1 id="headerTitle">2024-07-10</h1>
         </div>
 
         <ul id="todo-list"></ul>
@@ -26,6 +26,14 @@
     <script type="module">
         import TinyGesture from "https://unpkg.com/tinygesture@1.1.4/TinyGesture.js";
 
+        const headerTitle = document.getElementById("headerTitle");
+
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        const formattedDate = year + '-' + month + '-' + day;
+        headerTitle.textContent = formattedDate;
         const addButton = document.querySelector('#addButton');
         addButton.addEventListener('click', () => {
             addTodoItem("", "", "", false);
