@@ -185,18 +185,6 @@ class MainActivity : AppCompatActivity() {
     inner class WebAndroidBridge {
 
         @JavascriptInterface
-        fun updateTodo(id: String, content: String, dueDate: String, isDone: Boolean) {
-            mainViewModel.updateTodo(id, content, dueDate, isDone)
-
-            mainViewModel.apply {
-                loadTodo(UUID.fromString(id))
-                updateTodoContent(id, content)
-                updateTodoDueDate(id, dueDate)
-                updateTodoDone(id, isDone)
-            }
-        }
-
-        @JavascriptInterface
         fun updateTodoContent(id: String, content: String) {
             mainViewModel.apply {
                 loadTodo(UUID.fromString(id))
