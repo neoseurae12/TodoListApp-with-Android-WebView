@@ -22,6 +22,25 @@
             <span></span>
         </button>
     </div>
+    <div id="overlay"></div>
+    <div id="bottomSheet">
+        <div id="bottomSheet_handle"></div>
+        <div id="bottomSheet_content">
+            <button type="button" id="editButton" class="optionButton">
+                <i class="fa-regular fa-pen-to-square"></i>
+                <span>수정하기</span>
+            </button>
+            <button type="button" id="dueDateButton" class="optionButton">
+                <i class="fa-regular fa-calendar"></i>
+                <span>마감일 설정하기</span>
+            </button>
+            <form id="dueDateForm" style="display: none;">
+                <h2>마감일:</h2>
+                <input type="date" name="dueDate" required pattern="\d{4}-\d{2}-\d{2}" />
+                <button type="submit" id="dueDateSetButton">설정하기</button>
+            </form>
+        </div>
+    </div>
 
     <script type="module">
         import TinyGesture from "https://unpkg.com/tinygesture@1.1.4/TinyGesture.js";
