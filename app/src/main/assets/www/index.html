@@ -23,11 +23,6 @@
         </button>
     </div>
 
-    <!-- deleteAllTodoItems() 함수를 실험하기 위한 임시 버튼 => 나중엔 지울 것 -->
-    <!-- <button type="button" id="deleteAllButton"> -->
-
-<!--    <script type="module" src="./todo_list.js"></script>-->
-
     <script type="module">
         import TinyGesture from "https://unpkg.com/tinygesture@1.1.4/TinyGesture.js";
 
@@ -58,8 +53,6 @@
             }
         }
 
-        window.addTodoItem = addTodoItem;
-
         function removeTodoItem(todoItem) {
             window.Android.deleteTodo(todoItem.id);
 
@@ -74,6 +67,7 @@
             }
         }
 
+        window.addTodoItem = addTodoItem;
         window.removeAllTodoItems = removeAllTodoItems;
 
         function activateAddButton() {
