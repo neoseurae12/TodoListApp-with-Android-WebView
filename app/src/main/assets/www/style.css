@@ -174,3 +174,119 @@ h1 {
     white-space: pre-wrap;
     word-break: break-word;
 }
+
+#overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 998;
+    display: none;
+}
+
+#bottomSheet {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    bottom: -100%;
+    left: 0;
+    right: 0;
+    max-height: 170px;
+    background-color: white;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+    transition: bottom 0.5s ease;
+    align-items: center;
+    z-index: 999;
+}
+
+#bottomSheet_handle {
+    position: absolute;
+    top: 0;
+    width: 18%;
+    height: 5px;
+    background-color: #ccc;
+    border-radius: 5px;
+    margin: 10px auto;
+    cursor: pointer;
+}
+
+#bottomSheet_content {
+    width: 100%;
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 30px 6% 20px 6%;
+}
+
+#bottomSheet_content .optionButton {
+    flex: 1;
+    width: 45%;
+    height: 70px;
+    background-color: rgb(240, 240, 240);
+    margin: 0 8px;
+    border: none;
+    border-radius: 7px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+#bottomSheet_content .optionButton i {
+    font-size: 20px;
+}
+
+#bottomSheet_content .optionButton .fa-pen-to-square {
+    color: hsl(231, 100%, 53%);
+}
+
+#bottomSheet_content .optionButton .fa-calendar {
+    color: #ff1c1c;
+}
+
+#bottomSheet_content .optionButton span {
+    font-size: 14px;
+    margin-top: 8px;
+}
+
+#dueDateForm {
+    width: 100%;
+    font-family: sans-serif;
+    display: flex;
+    flex-direction: column;
+}
+
+#dueDateForm h2 {
+    margin: 4px 0;
+}
+
+#dueDateForm input {
+    margin: 8px 0;
+    height: 30px;
+    width: 80%;
+    align-self: center;
+}
+
+#dueDateForm #dueDateSetButton {
+    width: 25%;
+    height: 35px;
+    background-color: rgb(240, 240, 240);
+    margin-top: 5px;
+    border: none;
+    border-radius: 7px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    align-self: flex-end;
+    padding: 0;
+    background-color: #ffc3a1;
+    font-weight: 700;
+}
