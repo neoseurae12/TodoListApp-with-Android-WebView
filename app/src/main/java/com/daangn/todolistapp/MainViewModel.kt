@@ -10,7 +10,6 @@ import com.daangn.todolistapp.model.TodoEntity
 import com.daangn.todolistapp.repository.TodoRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.time.LocalDate
 import java.util.UUID
 
 private const val TAG = "MainViewModel"
@@ -31,19 +30,6 @@ class MainViewModel : ViewModel() {
 
     fun loadTodoById(todoId: UUID) {
         todoIdLiveData.postValue(todoId)
-    }
-
-    fun updateTodo(id: String, content: String, dueDate: String, isDone: Boolean) {
-        viewModelScope.launch(Dispatchers.IO) {
-            loadTodo(UUID.fromString(id))
-            todoLiveData.value?.let {
-                it.content = content
-                it.dueDate = LocalDate.parse(dueDate)
-                it.isDone = isDone
-
-                todoRepository.updateTodo(it)
-            }
-        }
     }
 
     fun updateTodoContent(todo: TodoEntity) {
