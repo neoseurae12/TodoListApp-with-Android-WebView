@@ -13,6 +13,8 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.util.UUID
 
+private const val TAG = "MainViewModel"
+
 class MainViewModel : ViewModel() {
 
     private val todoRepository = TodoRepository.get()
@@ -46,8 +48,8 @@ class MainViewModel : ViewModel() {
     }
 
     fun updateTodoContent(todo: TodoEntity) {
-        Log.d("todoToUpdate", "$todo")
-        Log.d("content", "${todo.content}")
+        Log.d(TAG, "업데이트된 투두: $todo")
+        Log.d(TAG, "내용: ${todo.content}")
 
         viewModelScope.launch(Dispatchers.IO) {
             todoRepository.updateTodo(todo)
@@ -55,8 +57,8 @@ class MainViewModel : ViewModel() {
     }
 
     fun updateTodoDueDate(todo: TodoEntity) {
-        Log.d("todoToUpdate", "$todo")
-        Log.d("dueDate", "${todo.dueDate}")
+        Log.d(TAG, "업데이트된 투두: $todo")
+        Log.d(TAG, "마감일: ${todo.dueDate}")
 
         viewModelScope.launch(Dispatchers.IO) {
             todoRepository.updateTodo(todo)
@@ -64,7 +66,7 @@ class MainViewModel : ViewModel() {
     }
 
     fun updateTodoDone(todo: TodoEntity) {
-        Log.d("todoToUpdate", "$todo")
+        Log.d(TAG, "업데이트된 투두: $todo")
 
         viewModelScope.launch(Dispatchers.IO) {
             todoRepository.updateTodo(todo)
