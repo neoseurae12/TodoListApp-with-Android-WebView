@@ -187,7 +187,7 @@ class MainActivity : AppCompatActivity() {
         @JavascriptInterface
         fun updateTodoContent(id: String, content: String) {
             mainViewModel.apply {
-                loadTodo(UUID.fromString(id))
+                loadTodoById(UUID.fromString(id))
                 todo.content = content
                 updateTodoContent(todo)
             }
@@ -196,7 +196,7 @@ class MainActivity : AppCompatActivity() {
         @JavascriptInterface
         fun updateTodoDueDate(id: String, dueDate: String) {
             mainViewModel.apply {
-                loadTodo(UUID.fromString(id))
+                loadTodoById(UUID.fromString(id))
                 todo.dueDate = LocalDate.parse(dueDate)
                 updateTodoDueDate(todo)
             }
@@ -205,7 +205,7 @@ class MainActivity : AppCompatActivity() {
         @JavascriptInterface
         fun updateTodoDone(id: String, isDone: Boolean) {
             mainViewModel.apply {
-                loadTodo(UUID.fromString(id))
+                loadTodoById(UUID.fromString(id))
                 todo.isDone = isDone
                 updateTodoDone(todo)
             }
@@ -215,7 +215,7 @@ class MainActivity : AppCompatActivity() {
         fun insertTodo(content: String): String {
             val insertedTodo = mainViewModel.insertTodo(content)
             Log.d(TAG, "inserted todo's UUID: ${insertedTodo.id}")
-            mainViewModel.loadTodo(insertedTodo.id)
+            mainViewModel.loadTodoById(insertedTodo.id)
             return insertedTodo.id.toString()
         }
 
@@ -224,7 +224,7 @@ class MainActivity : AppCompatActivity() {
             if (id.isBlank()) return
 
             mainViewModel.apply {
-                loadTodo(UUID.fromString(id))
+                loadTodoById(UUID.fromString(id))
                 Log.d(TAG, "deleteTodo: ${todo.content}")
                 deleteTodo(todo)
             }
