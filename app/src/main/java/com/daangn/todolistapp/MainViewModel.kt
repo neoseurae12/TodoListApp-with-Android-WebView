@@ -28,7 +28,6 @@ class MainViewModel : ViewModel() {
         }
 
     var webAddButtonEnabled = true
-    var hasInitialized = false
 
     fun loadTodo(todoId: UUID) {
         todoIdLiveData.postValue(todoId)

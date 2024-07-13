@@ -38,6 +38,8 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var todo: TodoEntity
 
+    private var loadOldTodos = true
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -100,17 +102,17 @@ class MainActivity : AppCompatActivity() {
                             todoListLiveData.observe(this@MainActivity) { todos ->
 
                                 // 데이터가 처음 로드된 경우에만 리스트 순회
-                                if (!hasInitialized && !todos.isNullOrEmpty()) {
+                                if (loadOldTodos) {
                                     for (todo in todos) {
                                         val js = "javascript:addTodoItem('${todo.id}', '${todo.content}', '${todo.dueDate ?: ""}', ${todo.isDone})"
                                         binding.todoListWebView.loadUrl(js)
                                     }
 
                                     // 데이터가 로드되었음을 표시
-                                    hasInitialized = true
-                                    Log.d(TAG, "hasInitialized: $hasInitialized")
+                                    Log.d(TAG, "old todos are loaded: $loadOldTodos")
+                                    loadOldTodos = false
 
-                                    mainViewModel.loadTodo(todos[0].id)
+                                    loadTodoById(UUID.randomUUID())
                                 }
 
                                 for (todo in todos) {
