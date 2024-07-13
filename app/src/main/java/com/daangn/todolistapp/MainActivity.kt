@@ -166,8 +166,6 @@ class MainActivity : AppCompatActivity() {
 
         return when (item.itemId) {
             R.id.deleteAllTodos -> {
-                // TODO: 다이얼로그 띄워서 한 번 더 '진짜 삭제할 거냐' 묻기
-
                 val js = "javascript:removeAllTodoItems()"
                 binding.todoListWebView.loadUrl(js)
 
