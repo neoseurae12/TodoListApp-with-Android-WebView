@@ -72,3 +72,6 @@
     - Bottom Sheet 에서 마감일 설정 작업을 선택한 경우, 해당 투두 항목에 대한 마감일을 설정 및 수정할 수 있습니다.
     - 마감일을 설정한 경우, 투두 항목 아래쪽에 마감일이 표시됩니다.
 
+## 시스템 설계도
+
+<img width="791" alt="image" src="https://github.com/user-attachments/assets/0ca34c4d-a7fb-415f-8d6e-840f0f3c7678">
