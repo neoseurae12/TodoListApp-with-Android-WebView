@@ -233,6 +233,8 @@ class MainActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun deleteTodo(id: String) {
+            if (id.isBlank()) return
+
             mainViewModel.apply {
                 loadTodo(UUID.fromString(id))
                 Log.d(TAG, "deleteTodo: ${todo.content}")
