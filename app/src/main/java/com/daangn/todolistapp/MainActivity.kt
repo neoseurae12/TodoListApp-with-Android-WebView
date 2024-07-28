@@ -18,10 +18,10 @@ import android.webkit.JavascriptInterface
 import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.lifecycle.ViewModelProvider
 import com.daangn.todolistapp.databinding.ActivityMainBinding
 import com.daangn.todolistapp.model.TodoEntity
 import java.time.LocalDate
@@ -32,9 +32,7 @@ private const val TAG = "MainActivity"
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
 
-    private val mainViewModel: MainViewModel by lazy {
-        ViewModelProvider(this)[MainViewModel::class.java]
-    }
+    private val mainViewModel: MainViewModel by viewModels()
 
     private lateinit var todo: TodoEntity
 
