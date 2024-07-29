@@ -53,29 +53,17 @@ class MainViewModel : ViewModel() {
         Log.d(TAG, "Get Todo: " + todo.value?.content)
     }
 
-    fun updateTodoContent(todo: TodoEntity) {
-        Log.d(TAG, "업데이트된 투두: $todo")
-        Log.d(TAG, "내용: ${todo.content}")
-
+    fun updateTodo(todoId: String, onUpdate: (TodoEntity) -> TodoEntity) {
         viewModelScope.launch(Dispatchers.IO) {
-            todoRepository.updateTodo(todo)
-        }
-    }
+            getTodo(UUID.fromString(todoId))
 
-    fun updateTodoDueDate(todo: TodoEntity) {
-        Log.d(TAG, "업데이트된 투두: $todo")
-        Log.d(TAG, "마감일: ${todo.dueDate}")
+            _todo.update { oldTodo ->
+                oldTodo?.let { onUpdate(it) }
+            }
 
-        viewModelScope.launch(Dispatchers.IO) {
-            todoRepository.updateTodo(todo)
-        }
-    }
+            todo.value?.let { todoRepository.updateTodo(it) }
 
-    fun updateTodoDone(todo: TodoEntity) {
-        Log.d(TAG, "업데이트된 투두: $todo")
-
-        viewModelScope.launch(Dispatchers.IO) {
-            todoRepository.updateTodo(todo)
+            Log.d(TAG, "업데이트된 투두의 내용: ${todo.value?.content}")
         }
     }
 

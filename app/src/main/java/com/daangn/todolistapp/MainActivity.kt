@@ -180,28 +180,22 @@ class MainActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun updateTodoContent(id: String, content: String) {
-            mainViewModel.apply {
-                loadTodoById(UUID.fromString(id))
-                todo.content = content
-                updateTodoContent(todo)
+            mainViewModel.updateTodo(id) { oldTodo ->
+                oldTodo.copy(content = content)
             }
         }
 
         @JavascriptInterface
         fun updateTodoDueDate(id: String, dueDate: String) {
-            mainViewModel.apply {
-                loadTodoById(UUID.fromString(id))
-                todo.dueDate = LocalDate.parse(dueDate)
-                updateTodoDueDate(todo)
+            mainViewModel.updateTodo(id) { oldTodo ->
+                oldTodo.copy(dueDate = LocalDate.parse(dueDate))
             }
         }
 
         @JavascriptInterface
         fun updateTodoDone(id: String, isDone: Boolean) {
-            mainViewModel.apply {
-                loadTodoById(UUID.fromString(id))
-                todo.isDone = isDone
-                updateTodoDone(todo)
+            mainViewModel.updateTodo(id) { oldTodo ->
+                oldTodo.copy(isDone = isDone)
             }
         }
 
