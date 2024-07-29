@@ -63,7 +63,7 @@ class MainActivity : AppCompatActivity() {
             todoTextInputEditText.apply {
                 setOnFocusChangeListener { v, hasFocus ->
                     if (!hasFocus) {
-                        hideKeyboard(v);
+                        hideKeyboard(v)
                     }
                 }
             }
