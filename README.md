@@ -74,4 +74,4 @@
 
 ## 시스템 설계도
 
-<img width="791" alt="image" src="https://github.com/user-attachments/assets/0ca34c4d-a7fb-415f-8d6e-840f0f3c7678">
+<img width="792" alt="image" src="https://github.com/user-attachments/assets/d3c1fa61-7394-468d-9637-0749b17a3366">
