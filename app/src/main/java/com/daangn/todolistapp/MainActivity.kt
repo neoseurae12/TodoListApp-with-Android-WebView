@@ -1,5 +1,6 @@
 package com.daangn.todolistapp
 
+import android.annotation.SuppressLint
 import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Bundle
@@ -15,7 +16,6 @@ import android.view.MenuItem
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.webkit.JavascriptInterface
-import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.enableEdgeToEdge
@@ -35,10 +35,7 @@ class MainActivity : AppCompatActivity() {
 
     private val mainViewModel: MainViewModel by viewModels()
 
-    private lateinit var todo: TodoEntity
-
-    private var loadOldTodos = true
-
+    @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -92,7 +89,6 @@ class MainActivity : AppCompatActivity() {
 
             todoListWebView.apply {
                 settings.javaScriptEnabled = true
-                webChromeClient = WebChromeClient()
                 addJavascriptInterface(WebAndroidBridge(), "Android")
 
                 webViewClient = object : WebViewClient() {
