@@ -4,10 +4,8 @@ import android.annotation.SuppressLint
 import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Bundle
-import android.text.Editable
 import android.text.SpannableString
 import android.text.Spanned
-import android.text.TextWatcher
 import android.text.style.ForegroundColorSpan
 import android.text.style.StyleSpan
 import android.util.Log
@@ -68,23 +66,6 @@ class MainActivity : AppCompatActivity() {
                         hideKeyboard(v);
                     }
                 }
-
-                addTextChangedListener(object : TextWatcher {
-                    override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-
-                    override fun onTextChanged(
-                        s: CharSequence?,
-                        start: Int,
-                        before: Int,
-                        count: Int
-                    ) {
-                        if (mainViewModel.webAddButtonEnabled) {
-                            todoAddImageButton.isEnabled = !s.isNullOrBlank()
-                        }
-                    }
-
-                    override fun afterTextChanged(s: Editable?) {}
-                })
             }
 
             todoListWebView.apply {
@@ -119,14 +100,14 @@ class MainActivity : AppCompatActivity() {
             }
 
             todoAddImageButton.apply {
-                isEnabled = false
-
                 setOnClickListener {
                     val content = todoTextInputEditText.text.toString()
                     Log.d(TAG, content)
 
-                    val js = "javascript:addTodoItem('', '$content', '', false)"
-                    todoListWebView.loadUrl(js)
+                    if (content.isNotBlank()) {
+                        val js = "javascript:addTodoItem('', '$content', '', false)"
+                        todoListWebView.loadUrl(js)
+                    }
 
                     todoTextInputEditText.text?.clear()
                     todoTextInputEditText.clearFocus()
@@ -225,7 +206,7 @@ class MainActivity : AppCompatActivity() {
                 mainViewModel.webAddButtonEnabled = enabled
                 binding.todoAddImageButton.apply {
                     isEnabled = enabled
-                    if (enabled) {
+                    if (isEnabled) {
                         setImageResource(R.drawable.add_todo_button)
                     } else {
                         setImageResource(R.drawable.add_todo_button_disabled)
