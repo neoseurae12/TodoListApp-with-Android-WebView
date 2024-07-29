@@ -150,8 +150,6 @@ class MainActivity : AppCompatActivity() {
                 val js = "javascript:removeAllTodoItems()"
                 binding.todoListWebView.loadUrl(js)
 
-                mainViewModel.deleteAllTodos()
-
                 true
             }
 
@@ -198,6 +196,11 @@ class MainActivity : AppCompatActivity() {
             if (id.isBlank()) return
 
             mainViewModel.deleteTodo(id)
+        }
+
+        @JavascriptInterface
+        fun deleteAllTodos() {
+            mainViewModel.deleteAllTodos()
         }
 
         @JavascriptInterface

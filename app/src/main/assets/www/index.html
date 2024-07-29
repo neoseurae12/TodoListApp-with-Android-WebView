@@ -103,11 +103,13 @@
         }
 
         function removeAllTodoItems() {
-            const allTodoItems = document.querySelectorAll('#todo-list li');
-            for (let i = 0; i < allTodoItems.length; i++) {
-                console.log("삭제된 투두: " + allTodoItems[i]);
-                removeTodoItem(allTodoItems[i]);
+            const todoList = document.querySelector('#todo-list');
+            while (todoList.firstChild) {
+                console.log("삭제된 투두: " + todoList.firstChild.id);
+                todoList.removeChild(todoList.firstChild);
             }
+
+            window.Android.deleteAllTodos();
         }
 
         window.addTodoItem = addTodoItem;
