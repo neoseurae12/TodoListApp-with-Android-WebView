@@ -20,13 +20,13 @@ class MainViewModel : ViewModel() {
     private val todoRepository = TodoRepository.get()
 
     private val _todos: MutableStateFlow<List<TodoEntity>> = MutableStateFlow(emptyList())
+    private val todos: StateFlow<List<TodoEntity>> = _todos.asStateFlow()
 
     private val _todo: MutableStateFlow<TodoEntity?> = MutableStateFlow(null)
-    val todo: StateFlow<TodoEntity?> = _todo.asStateFlow()
+    private val todo: StateFlow<TodoEntity?> = _todo.asStateFlow()
 
     private val _oldTodosReady = MutableStateFlow(false)
-    val oldTodosReady: StateFlow<Boolean>
-        get() = _oldTodosReady.asStateFlow()
+    val oldTodosReady: StateFlow<Boolean> = _oldTodosReady.asStateFlow()
 
     var webAddButtonEnabled = true
 
@@ -38,15 +38,15 @@ class MainViewModel : ViewModel() {
                 _oldTodosReady.value = true
 
                 // 디버깅: DB 의 투두 데이터들에 변경사항이 발생할 때마다, 그 시점의 DB 내 모든 투두 데이터들을 로그로 출력해 보임
-                for (todo in _todos.value) {
+                for (todo in todos.value) {
                     Log.d(TAG, "$todo")
                 }
-                Log.d(TAG, "Got ${_todos.value.size} todo(s)")
+                Log.d(TAG, "Got ${todos.value.size} todo(s)")
             }
         }
     }
 
-    fun getOldTodos(): List<TodoEntity> = _todos.value
+    fun getOldTodos(): List<TodoEntity> = todos.value
 
     private suspend fun getTodo(todoId: UUID) {
         _todo.value = todoRepository.getTodo(todoId)
