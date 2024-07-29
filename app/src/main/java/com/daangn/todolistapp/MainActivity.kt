@@ -23,6 +23,11 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import com.daangn.todolistapp.databinding.ActivityMainBinding
+import com.daangn.todolistapp.model.TodoEntity
+import com.google.gson.GsonBuilder
+import com.google.gson.JsonDeserializer
+import com.google.gson.JsonPrimitive
+import com.google.gson.JsonSerializer
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
@@ -69,7 +74,10 @@ class MainActivity : AppCompatActivity() {
             }
 
             todoListWebView.apply {
-                settings.javaScriptEnabled = true
+                settings.apply {
+                    javaScriptEnabled = true
+                    domStorageEnabled = true
+                }
                 addJavascriptInterface(WebAndroidBridge(), "Android")
 
                 webViewClient = object : WebViewClient() {
@@ -80,17 +88,16 @@ class MainActivity : AppCompatActivity() {
                         lifecycleScope.launch {
                             mainViewModel.oldTodosReady.collect { oldTodosReady ->
                                 if (oldTodosReady) {
-                                    val oldTodos = mainViewModel.getOldTodos()
-                                    oldTodos.forEach { oldTodo ->
-                                        val js =
-                                            "javascript:addTodoItem('${oldTodo.id}', '${oldTodo.content}', '${oldTodo.dueDate ?: ""}', ${oldTodo.isDone})"
-                                        runOnUiThread {
-                                            binding.todoListWebView.loadUrl(js)
-                                        }
-                                    }
-
+                                    val oldTodos = mainViewModel.todos.value
                                     Log.d(TAG, "old todos are loaded: ${oldTodos.size}")
                                 }
+                            }
+                        }
+
+                        // 웹 페이지가 로드된 후 (UI) + 투두들에 어떠한 변경사항이 발생할 때마다 (Data) => 브라우저의 로컬 스토리지를 싱크 맞춰줌
+                        lifecycleScope.launch {
+                            mainViewModel.todos.collect {
+                                syncLocalStorage()
                             }
                         }
                     }
@@ -160,6 +167,29 @@ class MainActivity : AppCompatActivity() {
     private fun hideKeyboard(view: View) {
         val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
         imm.hideSoftInputFromWindow(view.windowToken, 0)
+    }
+
+    private fun convertOldTodosToJson(oldTodos: List<TodoEntity>): String {
+        // Gson 객체 생성 시 LocalDate를 위한 커스텀 직렬화/역직렬화 추가
+        val gson = GsonBuilder()
+            .serializeNulls()
+            .setPrettyPrinting()
+            .registerTypeAdapter(LocalDate::class.java, JsonSerializer<LocalDate> { src, _, _ ->
+                JsonPrimitive(src.toString())
+            })
+            .registerTypeAdapter(LocalDate::class.java, JsonDeserializer { json, _, _ ->
+                LocalDate.parse(json.asString)
+            })
+            .create()
+
+        return gson.toJson(oldTodos)
+    }
+
+    private fun syncLocalStorage() {
+        val oldTodosJson = convertOldTodosToJson(mainViewModel.todos.value)
+
+        val js = "javascript:syncLocalStorage($oldTodosJson)"
+        binding.todoListWebView.loadUrl(js)
     }
 
     inner class WebAndroidBridge {

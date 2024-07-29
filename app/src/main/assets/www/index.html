@@ -52,6 +52,37 @@
         let isAnyTodoInInputMode = false;
         let todoItemInInputMode = null;
 
+        const addButton = document.querySelector('#addButton');
+        addButton.addEventListener('click', () => {
+            addTodoItem("", "", "", false);
+        })
+
+        const OLD_TODOS_KEY = "oldTodos";
+
+        function syncLocalStorage(oldTodosJson) {
+            localStorage.clear();
+            localStorage.setItem(OLD_TODOS_KEY, JSON.stringify(oldTodosJson));
+
+            console.log("로컬 스토리지 싱크:", localStorage.getItem(OLD_TODOS_KEY));
+        }
+
+        window.syncLocalStorage = syncLocalStorage;
+
+        function renderOldTodosFromLocalStorage() {
+            const oldTodos = localStorage.getItem(OLD_TODOS_KEY);
+            console.log("랜더링할 기존 투두들:", oldTodos);
+
+            if (oldTodos !== null) {
+                const parsedOldTodos = JSON.parse(oldTodos);
+                parsedOldTodos.forEach((oldTodo) => {
+                    addTodoItem(oldTodo.id, oldTodo.content, oldTodo.dueDate ? oldTodo.dueDate : "", oldTodo.isDone);
+                    console.log(oldTodo.content);
+                });
+            }
+        }
+
+        renderOldTodosFromLocalStorage();
+
         const today = new Date();
         const year = today.getFullYear();
         const month = String(today.getMonth() + 1).padStart(2, '0');
@@ -64,11 +95,6 @@
                 closeBottomSheet();
             }
         });
-
-        const addButton = document.querySelector('#addButton');
-        addButton.addEventListener('click', () => {
-            addTodoItem("", "", "", false);
-        })
 
         function addTodoItem(id, initialTodoText, initialDueDateText, initialDone) {
             const todoList = document.getElementById("todo-list");
@@ -116,8 +142,6 @@
         window.removeAllTodoItems = removeAllTodoItems;
 
         function activateAddButton() {
-            console.log("activate add button: " + !isAnyTodoInInputMode);
-
             if (!isAnyTodoInInputMode) {
                 addButton.disabled = false;
                 addButton.style.backgroundColor = "#ff8039";

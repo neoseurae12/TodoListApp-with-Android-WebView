@@ -20,7 +20,7 @@ class MainViewModel : ViewModel() {
     private val todoRepository = TodoRepository.get()
 
     private val _todos: MutableStateFlow<List<TodoEntity>> = MutableStateFlow(emptyList())
-    private val todos: StateFlow<List<TodoEntity>> = _todos.asStateFlow()
+    val todos: StateFlow<List<TodoEntity>> = _todos.asStateFlow()
 
     private val _todo: MutableStateFlow<TodoEntity?> = MutableStateFlow(null)
     private val todo: StateFlow<TodoEntity?> = _todo.asStateFlow()
@@ -45,8 +45,6 @@ class MainViewModel : ViewModel() {
             }
         }
     }
-
-    fun getOldTodos(): List<TodoEntity> = todos.value
 
     private suspend fun getTodo(todoId: UUID) {
         _todo.value = todoRepository.getTodo(todoId)
