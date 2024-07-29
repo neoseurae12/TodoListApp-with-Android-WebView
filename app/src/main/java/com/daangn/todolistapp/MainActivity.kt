@@ -22,10 +22,10 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.lifecycleScope
 import com.daangn.todolistapp.databinding.ActivityMainBinding
-import com.daangn.todolistapp.model.TodoEntity
+import kotlinx.coroutines.launch
 import java.time.LocalDate
-import java.util.UUID
 
 private const val TAG = "MainActivity"
 
@@ -52,16 +52,9 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(binding.todoListToolbar)
         supportActionBar?.setDisplayShowTitleEnabled(false)
 
-        mainViewModel.todoLiveData.observe(this@MainActivity) { todo ->
-            todo?.let {
-                this@MainActivity.todo = todo
-            }
-        }
-
         binding.apply {
 
             todoTextInputEditText.apply {
-
                 setOnFocusChangeListener { v, hasFocus ->
                     if (!hasFocus) {
                         hideKeyboard(v);
@@ -95,28 +88,21 @@ class MainActivity : AppCompatActivity() {
                     override fun onPageFinished(view: WebView?, url: String?) {
                         super.onPageFinished(view, url)
 
-                        // 페이지가 로드된 후 LiveData 관찰 시작
-                        mainViewModel.apply {
-                            todoListLiveData.observe(this@MainActivity) { todos ->
-
-                                // 데이터가 처음 로드된 경우에만 리스트 순회
-                                if (loadOldTodos) {
-                                    for (todo in todos) {
-                                        val js = "javascript:addTodoItem('${todo.id}', '${todo.content}', '${todo.dueDate ?: ""}', ${todo.isDone})"
-                                        binding.todoListWebView.loadUrl(js)
+                        // 웹 페이지가 로드된 후 (UI) + 기존 투두들이 모두 로드된 후 (Data) => 기존 투두들을 화면에 랜더링
+                        lifecycleScope.launch {
+                            mainViewModel.oldTodosReady.collect { oldTodosReady ->
+                                if (oldTodosReady) {
+                                    val oldTodos = mainViewModel.getOldTodos()
+                                    oldTodos.forEach { oldTodo ->
+                                        val js =
+                                            "javascript:addTodoItem('${oldTodo.id}', '${oldTodo.content}', '${oldTodo.dueDate ?: ""}', ${oldTodo.isDone})"
+                                        runOnUiThread {
+                                            binding.todoListWebView.loadUrl(js)
+                                        }
                                     }
 
-                                    // 데이터가 로드되었음을 표시
-                                    Log.d(TAG, "old todos are loaded: $loadOldTodos")
-                                    loadOldTodos = false
-
-                                    loadTodoById(UUID.randomUUID())
+                                    Log.d(TAG, "old todos are loaded: ${oldTodos.size}")
                                 }
-
-                                for (todo in todos) {
-                                    Log.d(TAG, "$todo")
-                                }
-                                Log.d(TAG, "Got ${todos.size} todo(s)")
                             }
                         }
                     }
@@ -129,9 +115,8 @@ class MainActivity : AppCompatActivity() {
                 isEnabled = false
 
                 setOnClickListener {
-                    Log.d(TAG, todoTextInputEditText.text.toString())
-
                     val content = todoTextInputEditText.text.toString()
+                    Log.d(TAG, content)
 
                     val js = "javascript:addTodoItem('', '$content', '', false)"
                     todoListWebView.loadUrl(js)
@@ -146,13 +131,23 @@ class MainActivity : AppCompatActivity() {
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.menu_main, menu)
 
-        // '모든 투두 삭제하기' 메뉸 아이템 => 위험한 동작임을 암시하는 스타일 적용
+        // '모든 투두 삭제하기' 메뉴 아이템 => 위험한 동작임을 암시하는 스타일 적용
         val deleteAllTodosMenuItem = menu?.findItem(R.id.deleteAllTodos)
         deleteAllTodosMenuItem?.let {
             val title = SpannableString(it.title)
             title.apply {
-                setSpan(ForegroundColorSpan(Color.RED), 0, title.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)  // 글자 색상: 빨강색
-                setSpan(StyleSpan(Typeface.BOLD), 0, title.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)    // 글자 스타일: 볼드
+                setSpan(
+                    ForegroundColorSpan(Color.RED),
+                    0,
+                    title.length,
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                )  // 글자 색상: 빨강색
+                setSpan(
+                    StyleSpan(Typeface.BOLD),
+                    0,
+                    title.length,
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                )    // 글자 스타일: 볼드
             }
             it.title = title
         }
@@ -171,6 +166,7 @@ class MainActivity : AppCompatActivity() {
 
                 true
             }
+
             else -> super.onOptionsItemSelected(item)
         }
     }
@@ -212,8 +208,6 @@ class MainActivity : AppCompatActivity() {
         @JavascriptInterface
         fun insertTodo(content: String): String {
             val insertedTodo = mainViewModel.insertTodo(content)
-            Log.d(TAG, "inserted todo's UUID: ${insertedTodo.id}")
-            mainViewModel.loadTodoById(insertedTodo.id)
             return insertedTodo.id.toString()
         }
 
@@ -221,11 +215,7 @@ class MainActivity : AppCompatActivity() {
         fun deleteTodo(id: String) {
             if (id.isBlank()) return
 
-            mainViewModel.apply {
-                loadTodoById(UUID.fromString(id))
-                Log.d(TAG, "deleteTodo: ${todo.content}")
-                deleteTodo(todo)
-            }
+            mainViewModel.deleteTodo(id)
         }
 
         @JavascriptInterface

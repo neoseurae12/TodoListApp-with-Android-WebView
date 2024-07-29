@@ -1,10 +1,10 @@
 package com.daangn.todolistapp.repository
 
 import android.content.Context
-import androidx.lifecycle.LiveData
 import androidx.room.Room
 import com.daangn.todolistapp.data.TodoDatabase
 import com.daangn.todolistapp.model.TodoEntity
+import kotlinx.coroutines.flow.Flow
 import java.util.UUID
 
 private const val DATABASE_NAME = "todo-database"
@@ -16,12 +16,11 @@ class TodoRepository private constructor(context: Context) {
         TodoDatabase::class.java,
         DATABASE_NAME
     ).build()
-
     private val todoDao = database.todoDao()
 
-    fun getTodos(): LiveData<List<TodoEntity>> = todoDao.getTodos()
+    fun getTodos(): Flow<List<TodoEntity>> = todoDao.getTodos()
 
-    fun getTodo(id: UUID): LiveData<TodoEntity?> = todoDao.getTodo(id)
+    suspend fun getTodo(id: UUID): TodoEntity = todoDao.getTodo(id)
 
     suspend fun updateTodo(todo: TodoEntity) {
         todoDao.updateTodo(todo)
