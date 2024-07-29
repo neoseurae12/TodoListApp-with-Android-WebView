@@ -18,6 +18,7 @@ import android.webkit.JavascriptInterface
 import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -40,12 +41,22 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        enableEdgeToEdge()
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         ViewCompat.setOnApplyWindowInsetsListener(binding.main) { v, insets ->
+            val imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime())
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+
+            // 키보드 또는 시스템 바에 의해 WebView 콘텐츠가 가려지지 않게 함
+            if (imeInsets.bottom > 0) {
+                // 키보드가 보이는 상태일 경우 => '키보드'의 하단 인셋 값 고려
+                v.setPadding(systemBars.left, systemBars.top, systemBars.right, imeInsets.bottom)
+            } else {
+                // 키보드가 안 보이는 상태일 경우 => '시스템 바'의 하단 인셋 값 고려
+                v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            }
+
             insets
         }
 
