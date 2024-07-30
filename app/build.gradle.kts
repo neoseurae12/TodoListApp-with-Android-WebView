@@ -51,14 +51,13 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 
-    implementation("androidx.activity:activity-ktx:1.9.0")
+    implementation(libs.androidx.activity.ktx)  // ViewModel
 
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
+    implementation(libs.kotlinx.coroutines.android) // Coroutines
 
-    implementation(libs.androidx.room.ktx)
-    implementation(libs.androidx.room.runtime)
-    annotationProcessor(libs.androidx.room.compiler)
-    kapt(libs.androidx.room.compiler)
+    // Room
+    implementation(libs.androidx.room.ktx)  // coroutines support for database transactions
+    implementation(libs.androidx.room.runtime)  // Room API, containing all the classes & annotations for defining database
     ksp(libs.androidx.room.compiler)   // Room compiler, generating database implementation based on the annotations
 
     implementation(libs.gson)
