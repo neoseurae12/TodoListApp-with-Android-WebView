@@ -2,7 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
 
-    id("kotlin-kapt")
+    id("com.google.devtools.ksp")
 }
 
 android {
@@ -36,7 +36,6 @@ android {
         jvmTarget = "1.8"
     }
     buildFeatures {
-        dataBinding = true
         viewBinding = true
     }
 }
@@ -60,6 +59,7 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     annotationProcessor(libs.androidx.room.compiler)
     kapt(libs.androidx.room.compiler)
+    ksp(libs.androidx.room.compiler)   // Room compiler, generating database implementation based on the annotations
 
     implementation(libs.gson)
 }
